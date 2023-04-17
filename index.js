@@ -1,25 +1,68 @@
 import data from './data.json' assert { type: 'json' };
 const main = document.querySelector('main');
+const overlay = document.getElementById('overlay');
 const { currentUser, comments } = data;
+let commentId = null;
+let replyId = null;
+let lastId = 4;
 
 const deleteModal = document.createElement('div');
-deleteModal.style.backgroundColor = 'white';
-deleteModal.style.position = 'absolute';
+deleteModal.className = 'delete-modal';
 const modalTitle = document.createElement('h2');
 modalTitle.textContent = 'Delete comment';
+modalTitle.className = 'modal-title';
 const modalDescription = document.createElement('p');
 modalDescription.textContent =
 	'Are you sure you want to delete this comment? This will remove the comment and it cannot be undone';
+modalDescription.className = 'modal-description';
 const cancelConfirmContainer = document.createElement('div');
+cancelConfirmContainer.className = 'cancel-confirm-container';
+
 const cancel = document.createElement('button');
 cancel.textContent = 'no. cancel';
+cancel.className = 'cancel-confirm-btn';
+cancel.id = 'cancel';
+cancel.addEventListener('click', () => {
+	deleteModal.style.display = 'none';
+	overlay.style.display = 'none';
+	updatePage();
+});
+
 const confirm = document.createElement('button');
 confirm.textContent = 'yes. delete';
+confirm.id = 'confirm';
+confirm.className = 'cancel-confirm-btn';
+confirm.addEventListener('click', () => {
+	const comment = comments.find((item) => item.id === commentId);
+	const newReplies = comment.replies.filter((item) => item.id !== replyId);
+	comment.replies = newReplies;
+	deleteModal.style.display = 'none';
+	overlay.style.display = 'none';
+	updatePage();
+});
+
 cancelConfirmContainer.appendChild(cancel);
 cancelConfirmContainer.appendChild(confirm);
 deleteModal.appendChild(modalTitle);
 deleteModal.appendChild(modalDescription);
 deleteModal.appendChild(cancelConfirmContainer);
+
+overlay.addEventListener('click', function () {
+	deleteModal.style.display = 'none';
+	overlay.style.display = 'none';
+});
+
+const setDeleteModalTopAttribute = () => {
+	const scrollY = window.scrollY;
+	const windowHeight = window.innerHeight;
+	const elementHeight = deleteModal.offsetHeight;
+	const offset = (windowHeight - elementHeight) / 2;
+	deleteModal.style.top = offset + scrollY + 'px';
+};
+
+window.addEventListener('scroll', function () {
+	setDeleteModalTopAttribute();
+});
 
 const getReply = (parentCommentId, replyId) => {
 	const parentComment = comments.find(
@@ -64,6 +107,7 @@ const updatePage = () => {
 	console.log('update');
 	displayComments(comments);
 	currentUserAction('send');
+	setDeleteModalTopAttribute();
 	main.appendChild(deleteModal);
 };
 
@@ -164,6 +208,13 @@ const createComment = (
 		deleteContainer.addEventListener('mouseout', () => {
 			deleteIcon.src = './images/icon-delete.svg';
 		});
+		deleteContainer.addEventListener('click', () => {
+			deleteModal.style.display = 'block';
+			overlay.style.display = 'block';
+			replyId = commentData.id;
+			commentId = parentCommentId;
+			updatePage();
+		});
 
 		const editIcon = document.createElement('img');
 		editIcon.src = './images/icon-edit.svg';
@@ -183,6 +234,17 @@ const createComment = (
 		});
 		editContainer.addEventListener('mouseout', () => {
 			editIcon.src = './images/icon-edit.svg';
+		});
+		// ---------------------------------------------------------------------------------------
+		editContainer.addEventListener('click', () => {
+			const commentOrReply = comments.find(
+				(item) => item.id === parentCommentId
+			);
+			const reply = commentOrReply.replies.find(
+				(item) => item.id === commentData.id
+			);
+			reply['editReply'] = true;
+			updatePage();
 		});
 
 		deleteEditContainer.appendChild(deleteContainer);
@@ -212,6 +274,7 @@ const createComment = (
 			//	currentUserAction('reply', commentData.id);
 			updatePage();
 		});
+		// ------------------------------------------------------------------------------------------------
 
 		const replySpan = document.createElement('span');
 		replySpan.textContent = 'Reply';
@@ -223,20 +286,6 @@ const createComment = (
 		replyContainer.appendChild(replySpan);
 	}
 
-	const commentText = document.createElement('p');
-	if (commentData?.replyingTo) {
-		const replyingToSpan = document.createElement('span');
-		replyingToSpan.textContent = `@${commentData.replyingTo} `;
-		replyingToSpan.className = 'replying-to-span';
-		const replyTextSpan = document.createElement('span');
-		replyTextSpan.textContent = commentData.content;
-		commentText.appendChild(replyingToSpan);
-		commentText.appendChild(replyTextSpan);
-	} else {
-		commentText.textContent = commentData.content;
-	}
-	commentText.style.paddingTop = '1em';
-
 	articleComment.appendChild(vote);
 
 	vote.appendChild(plusImg);
@@ -246,11 +295,42 @@ const createComment = (
 	articleComment.appendChild(description);
 
 	description.appendChild(heading);
+	// --------------------------------------------------------------------------------------------------------
 
-	description.appendChild(commentText);
+	if (commentData?.editReply) {
+		const textArea = document.createElement('textarea');
+		textArea.textContent = `@${commentData.replyingTo}, ${commentData.content}`;
+		textArea.className = 'user-edit-text-area';
+		description.appendChild(textArea);
+
+		const divBtn = document.createElement('div');
+		divBtn.style.textAlign = 'right';
+		divBtn.style.marginTop = '0.7em';
+		const updateButton = document.createElement('button');
+		updateButton.textContent = 'Update';
+		updateButton.className = 'send-reply';
+		divBtn.appendChild(updateButton);
+		description.appendChild(divBtn);
+	} else {
+		const commentText = document.createElement('p');
+		if (commentData?.replyingTo) {
+			const replyingToSpan = document.createElement('span');
+			replyingToSpan.textContent = `@${commentData.replyingTo} `;
+			replyingToSpan.className = 'replying-to-span';
+			const replyTextSpan = document.createElement('span');
+			replyTextSpan.textContent = commentData.content;
+			commentText.appendChild(replyingToSpan);
+			commentText.appendChild(replyTextSpan);
+		} else {
+			commentText.textContent = commentData.content;
+		}
+		commentText.style.paddingTop = '1em';
+		description.appendChild(commentText);
+	}
+	// ----------------------------------------------------------------------------------------------
 
 	main.appendChild(articleComment);
-
+	// ------------------------------------------------------------------------------------------------------------
 	if (commentData?.draftReply) {
 		currentUserAction('reply', commentData.id, commentData.user.username);
 		// 	commentData.draftReply = false;
@@ -273,7 +353,7 @@ const createReply = (type, content, toId, user) => {
 	const toCommentOrReply = comments.find((item) => item.draftReply);
 	const editedContent = content.split(' ').slice(1).join(' ');
 	const newReply = {
-		id: toId + 10,
+		id: ++lastId,
 		content: editedContent,
 		createdAt: new Date().toDateString(),
 		score: 0,

@@ -4,6 +4,7 @@
 }
 
 body {
+	position: relative;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -12,7 +13,6 @@ body {
 }
 
 main {
-	position: relative;
 	width: 100%;
 	max-width: 45em;
 	min-width: 40em;
@@ -165,7 +165,19 @@ main {
 	height: 7em;
 	margin: 0 1em;
 	border-radius: 1em;
-	padding: 1em 1.5em;
+	padding: 0.7em 1.4em;
+	border: 1px solid lightgrey;
+	color: gray;
+	font-family: 'Rubik', sans-serif;
+	font-weight: 500;
+}
+
+.user-edit-text-area {
+	width: 100%;
+	height: 7em;
+	margin-top: 1em;
+	border-radius: 1em;
+	padding: 0.7em 1.4em;
 	border: 1px solid lightgrey;
 	color: gray;
 	font-family: 'Rubik', sans-serif;
@@ -173,6 +185,10 @@ main {
 }
 
 .user-text-area:focus {
+	padding: 0.7em 1.4em;
+}
+
+.user-edit-text-area:focus {
 	padding: 0.7em 1.4em;
 }
 
@@ -194,6 +210,65 @@ main {
 
 .reply-span:hover {
 	color: hsl(239, 57%, 85%);
+}
+
+.delete-modal {
+	display: none;
+	z-index: 1;
+	background-color: white;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	max-width: 24em;
+	padding: 2em;
+	border-radius: 1em;
+}
+
+.modal-title {
+	color: hsl(211, 10%, 45%);
+}
+
+.modal-description {
+	color: hsl(211, 10%, 45%);
+	padding: 1em 0;
+}
+
+.cancel-confirm-container {
+	display: flex;
+	justify-content: space-between;
+	flex-direction: row;
+	column-gap: 1em;
+}
+
+.cancel-confirm-btn {
+	width: 100%;
+	border: none;
+	height: 3em;
+	text-transform: uppercase;
+	color: white;
+	font-weight: 700;
+	border-radius: 0.5em;
+	cursor: pointer;
+}
+
+#cancel {
+	background-color: hsl(211, 10%, 45%);
+}
+
+#confirm {
+	background-color: hsl(358, 79%, 66%);
+}
+
+.overlay {
+	display: none;
+	position: fixed;
+	z-index: 0;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.5);
 }
 
 .attribution {
