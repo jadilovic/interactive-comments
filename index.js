@@ -5,6 +5,12 @@ const { currentUser, comments } = data;
 let commentId = null;
 let replyId = null;
 let lastId = 4;
+let mobileScreen = window.innerWidth < 760;
+
+window.addEventListener('resize', function () {
+	mobileScreen = this.window.innerWidth < 760;
+	updatePage();
+});
 
 const deleteModal = document.createElement('div');
 deleteModal.className = 'delete-modal';
@@ -33,9 +39,16 @@ confirm.textContent = 'yes. delete';
 confirm.id = 'confirm';
 confirm.className = 'cancel-confirm-btn';
 confirm.addEventListener('click', () => {
-	const comment = comments.find((item) => item.id === commentId);
-	const newReplies = comment.replies.filter((item) => item.id !== replyId);
-	comment.replies = newReplies;
+	if (commentId) {
+		const comment = comments.find((item) => item.id === commentId);
+		const newReplies = comment.replies.filter((item) => item.id !== replyId);
+		comment.replies = newReplies;
+	} else {
+		const indexOfCommentToDelete = comments.findIndex(
+			(item) => item.id === replyId
+		);
+		comments.splice(indexOfCommentToDelete, 1);
+	}
 	deleteModal.style.display = 'none';
 	overlay.style.display = 'none';
 	updatePage();
@@ -125,8 +138,8 @@ const createComment = (
 		replyLine.className = 'reply-line';
 		replyLine.style.height = index === arr.length - 1 ? '98%' : '112%';
 		articleComment.appendChild(replyLine);
-		articleComment.style.width = '91%';
-		articleComment.style.marginLeft = '4em';
+		articleComment.style.width = mobileScreen ? 'calc(100% - 1.5em)' : '91%';
+		articleComment.style.marginLeft = mobileScreen ? '1.5em' : '4em';
 	}
 
 	const vote = document.createElement('div');
@@ -175,6 +188,10 @@ const createComment = (
 
 	userContainer.appendChild(userImg);
 	userContainer.appendChild(userName);
+
+	const articleFooter = document.createElement('div');
+	articleFooter.className = 'article-footer';
+
 	if (commentData.user.username === currentUser.username) {
 		const commentOwner = document.createElement('div');
 		commentOwner.textContent = 'you';
@@ -235,22 +252,32 @@ const createComment = (
 		editContainer.addEventListener('mouseout', () => {
 			editIcon.src = './images/icon-edit.svg';
 		});
-		// ---------------------------------------------------------------------------------------
 		editContainer.addEventListener('click', () => {
-			const commentOrReply = comments.find(
-				(item) => item.id === parentCommentId
-			);
-			const reply = commentOrReply.replies.find(
-				(item) => item.id === commentData.id
-			);
-			reply['editReply'] = true;
+			if (parentCommentId) {
+				const commentOrReply = comments.find(
+					(item) => item.id === parentCommentId
+				);
+				const reply = commentOrReply.replies.find(
+					(item) => item.id === commentData.id
+				);
+				reply['editReply'] = true;
+			} else {
+				const commentToEdit = comments.find(
+					(item) => item.id === commentData.id
+				);
+				commentToEdit['editReply'] = true;
+			}
 			updatePage();
 		});
 
 		deleteEditContainer.appendChild(deleteContainer);
 		deleteEditContainer.appendChild(editContainer);
 
-		heading.appendChild(deleteEditContainer);
+		if (mobileScreen) {
+			articleFooter.appendChild(deleteEditContainer);
+		} else {
+			heading.appendChild(deleteEditContainer);
+		}
 	} else {
 		const replyContainer = document.createElement('div');
 		replyContainer.className = 'reply-container';
@@ -267,35 +294,49 @@ const createComment = (
 		});
 
 		replyContainer.addEventListener('click', () => {
-			const commentOrReply = comments.find(
-				(item) => item.id === commentData.id
-			);
-			commentOrReply['draftReply'] = true;
+			let commentOrReply = comments.find((item) => item.id === commentData.id);
+			if (commentOrReply) {
+				commentOrReply['draftReply'] = true;
+			} else {
+				const parentComment = comments.find(
+					(item) => item.id === parentCommentId
+				);
+				commentOrReply = parentComment.replies.find(
+					(item) => item.id === commentData.id
+				);
+				commentOrReply['draftReply'] = true;
+			}
 			//	currentUserAction('reply', commentData.id);
 			updatePage();
 		});
-		// ------------------------------------------------------------------------------------------------
 
 		const replySpan = document.createElement('span');
 		replySpan.textContent = 'Reply';
 		replySpan.className = 'reply-span';
 
-		heading.appendChild(replyContainer);
-
+		if (mobileScreen) {
+			articleFooter.appendChild(replyContainer);
+		} else {
+			heading.appendChild(replyContainer);
+		}
 		replyContainer.appendChild(replyIcon);
 		replyContainer.appendChild(replySpan);
 	}
-
-	articleComment.appendChild(vote);
 
 	vote.appendChild(plusImg);
 	vote.appendChild(score);
 	vote.appendChild(minusImg);
 
-	articleComment.appendChild(description);
+	if (mobileScreen) {
+		articleComment.appendChild(description);
+		articleFooter.appendChild(vote);
+		articleComment.appendChild(articleFooter);
+	} else {
+		articleComment.appendChild(vote);
+		articleComment.appendChild(description);
+	}
 
 	description.appendChild(heading);
-	// --------------------------------------------------------------------------------------------------------
 
 	if (commentData?.editReply) {
 		const textArea = document.createElement('textarea');
@@ -303,14 +344,18 @@ const createComment = (
 		textArea.className = 'user-edit-text-area';
 		description.appendChild(textArea);
 
-		const divBtn = document.createElement('div');
-		divBtn.style.textAlign = 'right';
-		divBtn.style.marginTop = '0.7em';
+		const updateBtnWrapper = document.createElement('div');
+		updateBtnWrapper.className = 'update-btn-wrapper';
 		const updateButton = document.createElement('button');
 		updateButton.textContent = 'Update';
 		updateButton.className = 'send-reply';
-		divBtn.appendChild(updateButton);
-		description.appendChild(divBtn);
+		updateButton.addEventListener('click', () => {
+			console.log(textArea.value, parentCommentId);
+			console.log(commentData);
+			editReply(commentData.id, parentCommentId, textArea.value);
+		});
+		updateBtnWrapper.appendChild(updateButton);
+		description.appendChild(updateBtnWrapper);
 	} else {
 		const commentText = document.createElement('p');
 		if (commentData?.replyingTo) {
@@ -327,12 +372,16 @@ const createComment = (
 		commentText.style.paddingTop = '1em';
 		description.appendChild(commentText);
 	}
-	// ----------------------------------------------------------------------------------------------
 
 	main.appendChild(articleComment);
-	// ------------------------------------------------------------------------------------------------------------
+
 	if (commentData?.draftReply) {
-		currentUserAction('reply', commentData.id, commentData.user.username);
+		currentUserAction(
+			'reply',
+			commentData.id,
+			commentData.user.username,
+			parentCommentId
+		);
 		// 	commentData.draftReply = false;
 	}
 
@@ -349,28 +398,89 @@ const displayComments = (comments) => {
 	});
 };
 
-const createReply = (type, content, toId, user) => {
-	const toCommentOrReply = comments.find((item) => item.draftReply);
+const createReply = (type, content, toId, user, parentId) => {
+	let parentComment = null;
+	let toCommentOrReply = comments.find((item) => item.draftReply);
+	let reply = false;
+	if (!toCommentOrReply) {
+		reply = true;
+		parentComment = comments.find((item) => item.id === parentId);
+		toCommentOrReply = parentComment?.replies.find((item) => item.draftReply);
+	}
+	console.log(content);
 	const editedContent = content.split(' ').slice(1).join(' ');
+	console.log(editedContent);
 	const newReply = {
 		id: ++lastId,
 		content: editedContent,
-		createdAt: new Date().toDateString(),
+		createdAt: new Date().getTime(),
 		score: 0,
 		replyingTo: toCommentOrReply.user.username,
 		user: {
 			...currentUser,
 		},
 	};
-	toCommentOrReply.replies.push(newReply);
+	if (reply) {
+		parentComment.replies.push(newReply);
+	} else {
+		toCommentOrReply.replies.push(newReply);
+	}
 	delete toCommentOrReply.draftReply;
-	console.log(toCommentOrReply);
 	updatePage();
 };
 
-const currentUserAction = (type, commentOrReplyId = 0, userName = null) => {
+const editReply = (replyId, parentCommentId, editedContent) => {
+	const removedUserNameContent = editedContent.split(' ').slice(1).join(' ');
+	if (parentCommentId) {
+		const parentComment = comments.find((item) => item.id === parentCommentId);
+		const editedReply = parentComment.replies.find(
+			(item) => item.id === replyId
+		);
+		editedReply.content = removedUserNameContent;
+		delete editedReply.editReply;
+	} else {
+		const commentToEdit = comments.find((item) => item.id === replyId);
+		commentToEdit.content = removedUserNameContent;
+		delete commentToEdit.editReply;
+	}
+	updatePage();
+};
+
+const newComment = (content) => {
+	const newComment = {
+		id: ++lastId,
+		content,
+		createdAt: new Date().toDateString(),
+		score: 0,
+		user: {
+			...currentUser,
+		},
+		replies: [],
+	};
+	comments.push(newComment);
+	updatePage();
+};
+
+const currentUserAction = (
+	type,
+	commentOrReplyId = 0,
+	userName = null,
+	parentId = null
+) => {
 	const article = document.createElement('article');
 	article.className = 'user-comment-section';
+
+	if (parentId) {
+		const replyLine = document.createElement('div');
+		replyLine.className = 'reply-line';
+		replyLine.style.height = '112%';
+		article.appendChild(replyLine);
+		article.style.width = mobileScreen ? 'calc(100% - 1.5em)' : '91%';
+		article.style.marginLeft = mobileScreen ? '1.5em' : '4em';
+	}
+
+	const actionFooter = document.createElement('div');
+	actionFooter.className = 'action-footer';
 
 	const userImg = document.createElement('img');
 	userImg.src = currentUser.image.png;
@@ -387,12 +497,24 @@ const currentUserAction = (type, commentOrReplyId = 0, userName = null) => {
 	sendOrReplyButton.className = 'send-reply';
 
 	sendOrReplyButton.addEventListener('click', () => {
-		createReply(type, textArea.value, commentOrReplyId, userName);
+		console.log(type);
+		if (type === 'send') {
+			newComment(textArea.value);
+		} else {
+			createReply(type, textArea.value, commentOrReplyId, userName, parentId);
+		}
 	});
 
-	article.appendChild(userImg);
-	article.appendChild(textArea);
-	article.appendChild(sendOrReplyButton);
+	if (mobileScreen) {
+		actionFooter.appendChild(userImg);
+		actionFooter.appendChild(sendOrReplyButton);
+		article.appendChild(textArea);
+		article.appendChild(actionFooter);
+	} else {
+		article.appendChild(userImg);
+		article.appendChild(textArea);
+		article.appendChild(sendOrReplyButton);
+	}
 	main.appendChild(article);
 };
 

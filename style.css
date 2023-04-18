@@ -17,6 +17,7 @@ main {
 	max-width: 45em;
 	min-width: 40em;
 	margin: 3em 1em;
+	padding: 0 1em;
 }
 
 .comment {
@@ -27,6 +28,13 @@ main {
 	padding: 1em;
 	margin-bottom: 1em;
 	position: relative;
+}
+
+.article-footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 1em;
 }
 
 .reply-line {
@@ -151,6 +159,7 @@ main {
 }
 
 .user-comment-section {
+	position: relative;
 	background-color: white;
 	border-radius: 1em;
 	width: 100%;
@@ -181,7 +190,8 @@ main {
 	border: 1px solid lightgrey;
 	color: gray;
 	font-family: 'Rubik', sans-serif;
-	font-weight: 500;
+	font-weight: 400;
+	font-size: 1em;
 }
 
 .user-text-area:focus {
@@ -234,6 +244,57 @@ main {
 	padding: 1em 0;
 }
 
+@media screen and (max-width: 760px) {
+	.comment {
+		flex-direction: column;
+	}
+	.reply-container {
+		order: 1;
+	}
+	.vote {
+		width: fit-content;
+		height: fit-content;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+	}
+	.plus-sign {
+		padding: 0.7em;
+	}
+	.score {
+		padding: 0 0.5em;
+	}
+	main {
+		min-width: 20em;
+	}
+	.reply-line {
+		left: -1.5em;
+	}
+	.delete-edit {
+		order: 1;
+	}
+	.send-reply {
+		width: fit-content;
+		padding: 1em 2em;
+		height: 3em;
+	}
+	.user-comment-section {
+		flex-direction: column;
+	}
+	.user-text-area {
+		width: 100%;
+		margin: 0;
+	}
+}
+
+.action-footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 1em;
+}
+
 .cancel-confirm-container {
 	display: flex;
 	justify-content: space-between;
@@ -258,6 +319,11 @@ main {
 
 #confirm {
 	background-color: hsl(358, 79%, 66%);
+}
+
+.update-btn-wrapper {
+	text-align: right;
+	margin-top: 0.7em;
 }
 
 .overlay {
