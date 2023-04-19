@@ -257,6 +257,7 @@ const displayComment = (
 
 		const deleteIcon = document.createElement('img');
 		deleteIcon.src = './images/icon-delete.svg';
+		deleteIcon.alt = 'delete icon';
 		deleteIcon.className = 'delete-icon';
 
 		const deleteSpan = document.createElement('span');
@@ -284,6 +285,7 @@ const displayComment = (
 
 		const editIcon = document.createElement('img');
 		editIcon.src = './images/icon-edit.svg';
+		editIcon.alt = 'edit icon';
 		editIcon.className = 'edit-icon';
 
 		const editSpan = document.createElement('span');
@@ -333,6 +335,7 @@ const displayComment = (
 
 		const replyIcon = document.createElement('img');
 		replyIcon.src = './images/icon-reply.svg';
+		replyIcon.alt = 'reply icon';
 		replyIcon.className = 'reply-icon';
 
 		replyContainer.addEventListener('mouseover', () => {
@@ -389,7 +392,10 @@ const displayComment = (
 
 	if (commentData?.editReply) {
 		const textArea = document.createElement('textarea');
-		textArea.textContent = `@${commentData.replyingTo}, ${commentData.content}`;
+		textArea.textContent =
+			commentData.replyingTo == undefined
+				? `@all, ${commentData.content}`
+				: `@${commentData.replyingTo}, ${commentData.content}`;
 		textArea.className = 'user-edit-text-area';
 		description.appendChild(textArea);
 
