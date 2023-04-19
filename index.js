@@ -5,10 +5,10 @@ const { currentUser, comments } = data;
 let commentId = null;
 let replyId = null;
 let lastId = 4;
-let mobileScreen = window.innerWidth < 760;
+let isMobileScreen = window.innerWidth < 760;
 
 window.addEventListener('resize', function () {
-	mobileScreen = this.window.innerWidth < 760;
+	isMobileScreen = this.window.innerWidth < 760;
 	updatePage();
 });
 
@@ -116,8 +116,6 @@ const updatePage = () => {
 	while (main.firstChild) {
 		main.removeChild(main.firstChild);
 	}
-	console.log(comments);
-	console.log('update');
 	displayComments(comments);
 	currentUserAction('send');
 	setDeleteModalTopAttribute();
@@ -125,10 +123,10 @@ const updatePage = () => {
 };
 
 function fromNow(date) {
-	var seconds = Math.floor((new Date() - date) / 1000);
-	var years = Math.floor(seconds / 31536000);
-	var months = Math.floor(seconds / 2592000);
-	var days = Math.floor(seconds / 86400);
+	const seconds = Math.floor((new Date() - date) / 1000);
+	const years = Math.floor(seconds / 31536000);
+	const months = Math.floor(seconds / 2592000);
+	const days = Math.floor(seconds / 86400);
 
 	if (days > 548) {
 		return years + ' years ago';
@@ -143,7 +141,7 @@ function fromNow(date) {
 		return 'a month ago';
 	}
 
-	var hours = Math.floor(seconds / 3600);
+	const hours = Math.floor(seconds / 3600);
 
 	if (hours >= 36 && days <= 25) {
 		return days + ' days ago';
@@ -152,7 +150,7 @@ function fromNow(date) {
 		return 'a day ago';
 	}
 
-	var minutes = Math.floor(seconds / 60);
+	const minutes = Math.floor(seconds / 60);
 
 	if (minutes >= 90 && hours <= 21) {
 		return hours + ' hours ago';
@@ -171,7 +169,7 @@ function fromNow(date) {
 	}
 }
 
-const createComment = (
+const displayComment = (
 	commentData,
 	index = 0,
 	arr = [],
@@ -185,8 +183,8 @@ const createComment = (
 		replyLine.className = 'reply-line';
 		replyLine.style.height = index === arr.length - 1 ? '98%' : '112%';
 		articleComment.appendChild(replyLine);
-		articleComment.style.width = mobileScreen ? 'calc(100% - 1.5em)' : '91%';
-		articleComment.style.marginLeft = mobileScreen ? '1.5em' : '4em';
+		articleComment.style.width = isMobileScreen ? 'calc(100% - 1.5em)' : '91%';
+		articleComment.style.marginLeft = isMobileScreen ? '1.5em' : '4em';
 	}
 
 	const vote = document.createElement('div');
@@ -324,7 +322,7 @@ const createComment = (
 		deleteEditContainer.appendChild(deleteContainer);
 		deleteEditContainer.appendChild(editContainer);
 
-		if (mobileScreen) {
+		if (isMobileScreen) {
 			articleFooter.appendChild(deleteEditContainer);
 		} else {
 			heading.appendChild(deleteEditContainer);
@@ -365,7 +363,7 @@ const createComment = (
 		replySpan.textContent = 'Reply';
 		replySpan.className = 'reply-span';
 
-		if (mobileScreen) {
+		if (isMobileScreen) {
 			articleFooter.appendChild(replyContainer);
 		} else {
 			heading.appendChild(replyContainer);
@@ -378,7 +376,7 @@ const createComment = (
 	vote.appendChild(score);
 	vote.appendChild(minusImg);
 
-	if (mobileScreen) {
+	if (isMobileScreen) {
 		articleComment.appendChild(description);
 		articleFooter.appendChild(vote);
 		articleComment.appendChild(articleFooter);
@@ -401,8 +399,6 @@ const createComment = (
 		updateButton.textContent = 'Update';
 		updateButton.className = 'send-reply';
 		updateButton.addEventListener('click', () => {
-			console.log(textArea.value, parentCommentId);
-			console.log(commentData);
 			editReply(commentData.id, parentCommentId, textArea.value);
 		});
 		updateBtnWrapper.appendChild(updateButton);
@@ -433,23 +429,22 @@ const createComment = (
 			commentData.user.username,
 			parentCommentId
 		);
-		// 	commentData.draftReply = false;
 	}
 
 	if (commentData?.replies?.length > 0) {
 		commentData.replies.forEach((reply, index, arr) => {
-			createComment(reply, index, arr, commentData.id);
+			displayComment(reply, index, arr, commentData.id);
 		});
 	}
 };
 
 const displayComments = (comments) => {
 	comments.forEach((comment) => {
-		createComment(comment);
+		displayComment(comment);
 	});
 };
 
-const createReply = (type, content, toId, user, parentId) => {
+const createReply = (content, parentId) => {
 	let parentComment = null;
 	let toCommentOrReply = comments.find((item) => item.draftReply);
 	let reply = false;
@@ -458,9 +453,7 @@ const createReply = (type, content, toId, user, parentId) => {
 		parentComment = comments.find((item) => item.id === parentId);
 		toCommentOrReply = parentComment?.replies.find((item) => item.draftReply);
 	}
-	console.log(content);
 	const editedContent = content.split(' ').slice(1).join(' ');
-	console.log(editedContent);
 	const newReply = {
 		id: ++lastId,
 		content: editedContent,
@@ -497,7 +490,7 @@ const editReply = (replyId, parentCommentId, editedContent) => {
 	updatePage();
 };
 
-const newComment = (content) => {
+const createComment = (content) => {
 	const newComment = {
 		id: ++lastId,
 		content,
@@ -526,8 +519,8 @@ const currentUserAction = (
 		replyLine.className = 'reply-line';
 		replyLine.style.height = '112%';
 		article.appendChild(replyLine);
-		article.style.width = mobileScreen ? 'calc(100% - 1.5em)' : '91%';
-		article.style.marginLeft = mobileScreen ? '1.5em' : '4em';
+		article.style.width = isMobileScreen ? 'calc(100% - 1.5em)' : '91%';
+		article.style.marginLeft = isMobileScreen ? '1.5em' : '4em';
 	}
 
 	const actionFooter = document.createElement('div');
@@ -548,15 +541,14 @@ const currentUserAction = (
 	sendOrReplyButton.className = 'send-reply';
 
 	sendOrReplyButton.addEventListener('click', () => {
-		console.log(type);
 		if (type === 'send') {
-			newComment(textArea.value);
+			createComment(textArea.value);
 		} else {
-			createReply(type, textArea.value, commentOrReplyId, userName, parentId);
+			createReply(textArea.value, parentId);
 		}
 	});
 
-	if (mobileScreen) {
+	if (isMobileScreen) {
 		actionFooter.appendChild(userImg);
 		actionFooter.appendChild(sendOrReplyButton);
 		article.appendChild(textArea);

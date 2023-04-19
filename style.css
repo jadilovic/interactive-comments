@@ -338,8 +338,9 @@ main {
 }
 
 .attribution {
-	font-size: 11px;
+	font-size: 1em;
 	text-align: center;
+	line-height: 3em;
 }
 .attribution a {
 	color: hsl(228, 45%, 44%);
